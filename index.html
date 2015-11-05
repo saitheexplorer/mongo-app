@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+</head>
+<body>
+  <div id="root"></div>
+  <input type="text" id="database">
+  <input type="text" id="collection">
+  <select id="type">
+    <option value='find' selected="selected">Find</option>
+    <option value='count'>Count</option>
+  </select>
+  <button id="submit">SUBMIT</button>
+  <pre id="result"></pre>
+  <script>
+    const MongoClient = require('mongodb').MongoClient;
+    const $ = require('jquery');
+
+    $(function () {
+      $('#submit').on('click', function (e) {
+        e.preventDefault();
+
+        makeQuery($('#database').val(), $('#collection').val(), $('#type').val(), function (error, count) {
+          if (error) throw error;
+
+          $('#result').text(count);
+        });
+      });
+    });
+
+    function makeQuery(database, collection, type, callback) {
+      console.log(type);
+
+      MongoClient.connect('mongodb://db3:27017/' + database, function (error, db) {
+        if (type === 'count') {
+          db.collection(collection).count(function (error, count) {
+            db.close();
+
+            callback(error, count);
+          });
+        } else {
+          db.collection(collection).find().limit(10).toArray(function (error, result) {
+            db.close();
+
+            callback(error, JSON.stringify(result, null, 2));
+          });
+        }
+      });
+    }
+  </script>
+  <!-- <script type="text/javascript" src="dist/bundle.js"></script> -->
+</body>
+</html>
