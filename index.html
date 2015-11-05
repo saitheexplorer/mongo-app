@@ -7,6 +7,7 @@
   <div id="root"></div>
   <input type="text" id="database">
   <input type="text" id="collection">
+  <textarea id="query"></textarea>
   <select id="type">
     <option value='find' selected="selected">Find</option>
     <option value='count'>Count</option>
@@ -21,7 +22,7 @@
       $('#submit').on('click', function (e) {
         e.preventDefault();
 
-        makeQuery($('#database').val(), $('#collection').val(), $('#type').val(), function (error, count) {
+        makeQuery($('#database').val(), $('#collection').val(), $('#type').val(), $('#query').val(), function (error, count) {
           if (error) throw error;
 
           $('#result').text(count);
@@ -29,18 +30,24 @@
       });
     });
 
-    function makeQuery(database, collection, type, callback) {
-      console.log(type);
-
+    function makeQuery(database, collection, type, query, callback) {
       MongoClient.connect('mongodb://db3:27017/' + database, function (error, db) {
+        if (query === '') query = '{}';
+
+        try {
+          query = JSON.parse(query);
+        } catch (e) {
+          throw e;
+        }
+
         if (type === 'count') {
-          db.collection(collection).count(function (error, count) {
+          db.collection(collection).find(query).count(function (error, count) {
             db.close();
 
             callback(error, count);
           });
         } else {
-          db.collection(collection).find().limit(10).toArray(function (error, result) {
+          db.collection(collection).find(query).limit(10).toArray(function (error, result) {
             db.close();
 
             callback(error, JSON.stringify(result, null, 2));
